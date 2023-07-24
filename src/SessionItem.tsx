@@ -6,6 +6,7 @@ import {
 import { Session } from './types'
 import FileCopyIcon from '@mui/icons-material/FileCopy';
 import EditIcon from '@mui/icons-material/Edit';
+import SettingIcon from '@mui/icons-material/Settings';
 import ChatBubbleOutlineOutlinedIcon from '@mui/icons-material/ChatBubbleOutlineOutlined';
 import MoreHorizOutlinedIcon from '@mui/icons-material/MoreHorizOutlined';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
@@ -22,11 +23,12 @@ export interface Props {
     copyMe: () => void
     switchStarred: () => void
     editMe: () => void
+    settingMe: () => void
 }
 
 export default function SessionItem(props: Props) {
     const { t } = useTranslation()
-    const { session, selected, switchMe, deleteMe, copyMe, switchStarred, editMe } = props
+    const { session, selected, switchMe, deleteMe, copyMe, switchStarred, editMe, settingMe } = props
     const [hovering, setHovering] = useState(false)
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
@@ -91,6 +93,14 @@ export default function SessionItem(props: Props) {
                 }} disableRipple>
                     <EditIcon />
                     {t('rename')}
+                </MenuItem>
+
+                <MenuItem key={session.id + 'setting'} onClick={() => {
+                    settingMe()
+                    handleClose()
+                }} disableRipple>
+                    <SettingIcon />
+                    {t('setting')}
                 </MenuItem>
 
                 <MenuItem key={session.id + 'copy'} onClick={() => {

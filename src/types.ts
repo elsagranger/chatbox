@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from 'uuid';
 import { ThemeMode } from './theme';
 
 export type Message = OpenAIMessage & {
@@ -8,48 +7,33 @@ export type Message = OpenAIMessage & {
     model?: string
 }
 
-export interface Session{
+export interface ModelSetting {
+    name: string,
+    apiHost: string
+    apiKey?: string
+    maxContextSize: string
+    temperature: number
+    maxTokens: string
+    needFormatPrompt: boolean
+    systemMessage: string
+}
+
+export interface Session {
     id: string
     name: string
     messages: Message[]
     starred?: boolean
-}
-
-export function createMessage(role: OpenAIRoleEnumType = OpenAIRoleEnum.User, content: string = ''): Message {
-    return {
-        id: uuidv4(),
-        content: content,
-        role: role,
-    }
-}
-
-export function createSession(name: string = "Untitled"): Session {
-    return {
-        id: uuidv4(),
-        name: name,
-        messages: [
-            {
-                id: uuidv4(),
-                role: 'system',
-                content: 'You are a helpful assistant. You can help me by answering my questions. You can also ask me questions.'
-            }
-        ],
-    }
+    model: ModelSetting
 }
 
 export interface Settings {
-    openaiKey: string
-    apiHost: string
-    model: string
-    maxContextSize: string
-    temperature: number
-    maxTokens: string
     showWordCount?: boolean
     showTokenCount?: boolean
     showModelName?: boolean
     theme: ThemeMode
     language: string
     fontSize: number
+    modelConfig: ModelSetting
 }
 
 export const OpenAIRoleEnum = {
@@ -66,7 +50,7 @@ export interface OpenAIMessage {
     'name'?: string;
 }
 
-export interface Config{
+export interface Config {
     uuid: string
 }
 
@@ -83,3 +67,5 @@ export interface SponsorAboutBanner {
     title: string
     description: string
 }
+
+export const GPTModels: string[] = ['gpt-3.5-turbo', 'gpt-3.5-turbo-0301', 'gpt-4', 'gpt-4-0314', 'gpt-4-32k', 'gpt-4-32k-0314'];

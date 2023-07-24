@@ -1,4 +1,5 @@
-import { Message } from './types';
+import { getConversationTemplate } from './conversation';
+import { Message, ModelSetting } from './types';
 import * as wordCount from './utils';
 import { createParser } from 'eventsource-parser'
 
@@ -9,13 +10,8 @@ export interface OnTextCallbackResult {
     cancel: () => void;
 }
 
-export async function replay(
-    apiKey: string,
-    host: string,
-    maxContextSize: string,
-    maxTokens: string,
-    modelName: string,
-    temperature: number,
+export async function completions(
+    modelConfig: ModelSetting,
     msgs: Message[],
     onText?: (option: OnTextCallbackResult) => void,
     onError?: (error: Error) => void,
@@ -23,13 +19,14 @@ export async function replay(
     if (msgs.length === 0) {
         throw new Error('No messages to replay')
     }
+
     const head = msgs[0].role === 'system' ? msgs[0] : undefined
     if (head) {
         msgs = msgs.slice(1)
     }
 
-    const maxTokensNumber = Number(maxTokens)
-    const maxLen = Number(maxContextSize)
+    const maxTokensNumber = Number(modelConfig.maxTokens)
+    const maxLen = Number(modelConfig.maxContextSize)
     let totalLen = head ? wordCount.estimateTokens(head.content) : 0
 
     let prompts: Message[] = []
@@ -46,6 +43,8 @@ export async function replay(
         prompts = [head, ...prompts]
     }
 
+    let convTemplate = getConversationTemplate(modelConfig.name)
+
     // fetch has been canceled
     let hasCancel = false;
     // abort signal for fetch
@@ -56,50 +55,52 @@ export async function replay(
     };
 
     let fullText = '';
-    try {
-        const messages = prompts.map(msg => ({ role: msg.role, content: msg.content }))
-        const response = await fetch(`${host}/v1/chat/completions`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                messages,
-                model: modelName,
-                max_tokens: maxTokensNumber,
-                temperature,
-                stream: true,
-            }),
-            signal: controller.signal,
-        });
-        await handleSSE(response, (message) => {
-            if (message === '[DONE]') {
+    if (convTemplate.chat) {
+        try {
+            const messages = prompts.map(msg => ({ role: msg.role, content: msg.content }))
+            const response = await fetch(`${modelConfig.apiHost}/chat/completions`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${modelConfig.apiKey}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    messages,
+                    model: modelConfig.name,
+                    max_tokens: maxTokensNumber,
+                    temperature: modelConfig.temperature,
+                    stream: true,
+                }),
+                signal: controller.signal,
+            });
+            await handleSSE(response, (message) => {
+                if (message === '[DONE]') {
+                    return;
+                }
+                const data = JSON.parse(message)
+                if (data.error) {
+                    throw new Error(`Error: ${JSON.stringify(data)}`)
+                }
+                const text = data.choices[0]?.delta?.content
+                if (text !== undefined) {
+                    fullText += text
+                    if (onText) {
+                        onText({ text: fullText, cancel })
+                    }
+                }
+            })
+        } catch (error) {
+            // if a cancellation is performed
+            // do not throw an exception
+            // otherwise the content will be overwritten.
+            if (hasCancel) {
                 return;
             }
-            const data = JSON.parse(message)
-            if (data.error) {
-                throw new Error(`Error from OpenAI: ${JSON.stringify(data)}`)
+            if (onError) {
+                onError(error as any)
             }
-            const text = data.choices[0]?.delta?.content
-            if (text !== undefined) {
-                fullText += text
-                if (onText) {
-                    onText({ text: fullText, cancel })
-                }
-            }
-        })
-    } catch (error) {
-        // if a cancellation is performed
-        // do not throw an exception
-        // otherwise the content will be overwritten.
-        if (hasCancel) {
-            return;
+            throw error
         }
-        if (onError) {
-            onError(error as any)
-        }
-        throw error
     }
     return fullText
 }

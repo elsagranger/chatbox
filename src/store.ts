@@ -1,22 +1,31 @@
 import { useState, useEffect, useRef } from 'react'
-import { Settings, createSession, Session, Message, Config } from './types'
+import { Settings, Session, Message, Config, ModelSetting } from './types'
 import * as defaults from './defaults'
 import { v4 as uuidv4 } from 'uuid';
 import { ThemeMode } from './theme';
 import * as api from './api'
 import * as remote from './remote'
 import { useTranslation } from "react-i18next";
+import { createSession } from './session';
 
 // setting store
 
+export function getDefaultModelSetting(): ModelSetting {
+    return {
+        name: 'gpt-3.5-turbo',
+        apiKey: '',
+        apiHost: 'https://api.openai.com',
+        maxContextSize: "4000",
+        temperature: 0.7,
+        maxTokens: "2048",
+        needFormatPrompt: false,
+        systemMessage: 'You are a helpful assistant. You can help me by answering my questions. You can also ask me questions.',
+    }
+}
+
 export function getDefaultSettings(): Settings {
     return {
-        openaiKey: '',
-        apiHost: 'https://api.openai.com',
-        model: "gpt-3.5-turbo",
-        temperature: 0.7,
-        maxContextSize: "4000",
-        maxTokens: "2048",
+        modelConfig: getDefaultModelSetting(),
         showWordCount: false,
         showTokenCount: false,
         showModelName: false,
@@ -38,10 +47,10 @@ export async function readSettings(): Promise<Settings> {
 }
 
 export async function writeSettings(settings: Settings) {
-    if (!settings.apiHost) {
-        settings.apiHost = getDefaultSettings().apiHost
+    if (!settings.modelConfig.apiHost) {
+        settings.modelConfig.apiHost = getDefaultSettings().modelConfig.apiHost
     }
-    console.log('writeSettings.apiHost', settings.apiHost)
+    console.log('writeSettings.apiHost', settings.modelConfig.apiHost)
     return api.writeStore('settings', settings)
 }
 
@@ -71,7 +80,7 @@ export async function readSessions(settings: Settings): Promise<Session[]> {
     return sessions.map((s: any) => {
         // 兼容旧版本的数据
         if (!s.model) {
-            s.model = getDefaultSettings().model
+            s.model = getDefaultSettings().modelConfig
         }
         return s
     })
@@ -118,7 +127,7 @@ export default function useStore() {
     useEffect(() => {
         readSettings().then((settings) => {
             _setSettings(settings)
-            if (settings.openaiKey === '') {
+            if (settings.modelConfig.apiKey === '') {
                 setNeedSetting(true)
             }
             i18n.changeLanguage(settings.language).then();
