@@ -1,6 +1,6 @@
 
 import { v4 as uuidv4 } from 'uuid';
-import { OpenAIRoleEnum, OpenAIRoleEnumType, Session, Message } from './types';
+import { OpenAIRoleEnum, OpenAIRoleEnumType, Session, Message, ModelSetting } from './types';
 import { getDefaultModelSetting } from './store';
 
 export function createMessage(role: OpenAIRoleEnumType = OpenAIRoleEnum.User, content: string = ''): Message {
@@ -11,7 +11,10 @@ export function createMessage(role: OpenAIRoleEnumType = OpenAIRoleEnum.User, co
     }
 }
 
-export function createSession(name: string = "Untitled"): Session {
+export function createSession(name: string, modelSetting?: ModelSetting): Session {
+    if (modelSetting === undefined) {
+        modelSetting = getDefaultModelSetting()
+    }
     return {
         id: uuidv4(),
         name: name,
@@ -19,10 +22,10 @@ export function createSession(name: string = "Untitled"): Session {
             {
                 id: uuidv4(),
                 role: 'system',
-                content: 'You are a helpful assistant. You can help me by answering my questions. You can also ask me questions.'
+                content: modelSetting.systemMessage
             }
         ],
-        model: getDefaultModelSetting(),
+        modelSetting,
     }
 }
 

@@ -94,6 +94,19 @@ export default function SessionModelSettingWindow(props: Props) {
             <DialogTitle>{t('settings')}</DialogTitle>
             <DialogContent>
                 <TextField
+                    margin="dense"
+                    label={t('system prompt')}
+                    type="text"
+                    fullWidth
+                    variant="outlined"
+                    multiline
+                    value={settingsEdit.systemMessage}
+                    onChange={(e) => {
+                        setSettingsEdit({ ...settingsEdit, systemMessage: e.target.value.trim() })
+                    }}
+                />
+
+                <TextField
                     autoFocus
                     margin="dense"
                     label={t('openai api key')}
@@ -105,86 +118,78 @@ export default function SessionModelSettingWindow(props: Props) {
                         setSettingsEdit({ ...settingsEdit, apiKey: e.target.value.trim() })
                     }}
                 />
-                <Accordion>
-                    <AccordionSummary aria-controls="panel1a-content">
-                        <Typography>{t('proxy')}</Typography>
-                    </AccordionSummary>
-                    <AccordionDetails>
-                        <TextField
-                            margin="dense"
-                            label={t('api host')}
-                            type="text"
-                            fullWidth
-                            variant="outlined"
-                            value={settingsEdit.apiHost}
-                            onChange={(e) => {
-                                setSettingsEdit({ ...settingsEdit, apiHost: e.target.value.trim() })
-                            }}
-                        />
+                <TextField
+                    margin="dense"
+                    label={t('api host')}
+                    type="text"
+                    fullWidth
+                    variant="outlined"
+                    value={settingsEdit.apiHost}
+                    onChange={(e) => {
+                        setSettingsEdit({ ...settingsEdit, apiHost: e.target.value.trim() })
+                    }}
+                />
 
-                        {
-                            !settingsEdit.apiHost.match(/^(https?:\/\/)?api.openai.com(:\d+)?$/) && (
-                                <Alert severity="warning">
-                                    {t('proxy warning', { apiHost: settingsEdit.apiHost })}
-                                    <Button onClick={() => setSettingsEdit({ ...settingsEdit, apiHost: getDefaultSettings().modelConfig.apiHost })}>{t('reset')}</Button>
-                                </Alert>
-                            )
-                        }
-                        {
-                            settingsEdit.apiHost.startsWith('http://') && (
-                                <Alert severity="warning">
-                                    {<Trans
-                                        i18nKey="protocol warning"
-                                        components={{ bold: <strong /> }}
-                                    />}
-                                </Alert>
-                            )
-                        }
-                        {
-                            !settingsEdit.apiHost.startsWith('http') && (
-                                <Alert severity="error">
-                                    {<Trans
-                                        i18nKey="protocol error"
-                                        components={{ bold: <strong /> }}
-                                    />}
-                                </Alert>
-                            )
-                        }
+                {
+                    !settingsEdit.apiHost.match(/^(https?:\/\/)?api.openai.com(:\d+)?$/) && (
+                        <Alert severity="warning">
+                            {t('proxy warning', { apiHost: settingsEdit.apiHost })}
+                            <Button onClick={() => setSettingsEdit({ ...settingsEdit, apiHost: getDefaultSettings().modelSetting.apiHost })}>{t('reset')}</Button>
+                        </Alert>
+                    )
+                }
+                {
+                    settingsEdit.apiHost.startsWith('http://') && (
+                        <Alert severity="warning">
+                            {<Trans
+                                i18nKey="protocol warning"
+                                components={{ bold: <strong /> }}
+                            />}
+                        </Alert>
+                    )
+                }
+                {
+                    !settingsEdit.apiHost.startsWith('http') && (
+                        <Alert severity="error">
+                            {<Trans
+                                i18nKey="protocol error"
+                                components={{ bold: <strong /> }}
+                            />}
+                        </Alert>
+                    )
+                }
 
-                    </AccordionDetails>
-                </Accordion>
+                <FormControl fullWidth variant="outlined" margin="dense">
+                    <InputLabel htmlFor="model-select">{t('model')}</InputLabel>
+                    <Select
+                        label="Model"
+                        id="model-select"
+                        value={settingsEdit.name}
+                        onChange={(e) => {
+                            setSettingsEdit({ ...settingsEdit, name: e.target.value })
+                        }}>
+                        {GPTModels.map((model) => (
+                            <MenuItem key={model} value={model}>
+                                {model}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
+
                 <Accordion>
                     <AccordionSummary
                         aria-controls="panel1a-content"
                     >
-                        <Typography>{t('model')} & {t('token')} </Typography>
+                        <Typography>{t('token')} </Typography>
                     </AccordionSummary>
                     <AccordionDetails>
                         <Alert severity="warning">
                             {t('settings modify warning')}
                             {t('please make sure you know what you are doing.')}
                             {t('click here to')}
-                            <Button onClick={() => setSettingsEdit(getDefaultSettings().modelConfig)}>{t('reset')}</Button>
+                            <Button onClick={() => setSettingsEdit(getDefaultSettings().modelSetting)}>{t('reset')}</Button>
                             {t('to default values.')}
                         </Alert>
-
-                        <FormControl fullWidth variant="outlined" margin="dense">
-                            <InputLabel htmlFor="model-select">{t('model')}</InputLabel>
-                            <Select
-                                label="Model"
-                                id="model-select"
-                                value={settingsEdit.name}
-                                onChange={(e) => {
-                                    setSettingsEdit({ ...settingsEdit, name: e.target.value })
-                                }}>
-                                {GPTModels.map((model) => (
-                                    <MenuItem key={model} value={model}>
-                                        {model}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-
                         <Box sx={{ marginTop: 3, marginBottom: 1 }}>
                             <Typography id="discrete-slider" gutterBottom>
                                 {t('temperature')}

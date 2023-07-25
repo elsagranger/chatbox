@@ -37,47 +37,47 @@ export default function SettingWindow(props: Props) {
     const { t } = useTranslation()
     const [settingsEdit, setSettingsEdit] = React.useState<Settings>(props.settings);
     const handleRepliesTokensSliderChange = (event: Event, newValue: number | number[], activeThumb: number) => {
-        let model = settingsEdit.modelConfig
+        let model = settingsEdit.modelSetting
         model.maxTokens = newValue === 8192 ? 'inf' : newValue.toString()
-        setSettingsEdit({ ...settingsEdit, modelConfig: model });
+        setSettingsEdit({ ...settingsEdit, modelSetting: model });
     };
     const handleMaxContextSliderChange = (event: Event, newValue: number | number[], activeThumb: number) => {
-        let model = settingsEdit.modelConfig
+        let model = settingsEdit.modelSetting
         model.maxContextSize = newValue === 8192 ? 'inf' : newValue.toString()
-        setSettingsEdit({ ...settingsEdit, modelConfig: model });
+        setSettingsEdit({ ...settingsEdit, modelSetting: model });
     };
     const handleTemperatureChange = (event: Event, newValue: number | number[], activeThumb: number) => {
-        let model = settingsEdit.modelConfig
+        let model = settingsEdit.modelSetting
         model.temperature = typeof newValue === 'number' ? newValue : newValue[activeThumb]
-        setSettingsEdit({ ...settingsEdit, modelConfig: model });
+        setSettingsEdit({ ...settingsEdit, modelSetting: model });
     };
     const handleRepliesTokensInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.value;
         if (value === 'inf') {
-            let model = settingsEdit.modelConfig
+            let model = settingsEdit.modelSetting
             model.maxContextSize = 'inf'
-            setSettingsEdit({ ...settingsEdit, modelConfig: model });
+            setSettingsEdit({ ...settingsEdit, modelSetting: model });
         } else {
             const numValue = Number(value);
             if (!isNaN(numValue) && numValue >= 0) {
-                let model = settingsEdit.modelConfig
+                let model = settingsEdit.modelSetting
                 model.maxContextSize = numValue > 8192 ? 'inf' : value
-                setSettingsEdit({ ...settingsEdit, modelConfig: model });
+                setSettingsEdit({ ...settingsEdit, modelSetting: model });
             }
         }
     };
     const handleMaxContextInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.value;
         if (value === 'inf') {
-            let model = settingsEdit.modelConfig
+            let model = settingsEdit.modelSetting
             model.maxContextSize = 'inf'
-            setSettingsEdit({ ...settingsEdit, modelConfig: model });
+            setSettingsEdit({ ...settingsEdit, modelSetting: model });
         } else {
             const numValue = Number(value);
             if (!isNaN(numValue) && numValue >= 0) {
-                let model = settingsEdit.modelConfig
+                let model = settingsEdit.modelSetting
                 model.maxContextSize = numValue > 8192 ? 'inf' : value
-                setSettingsEdit({ ...settingsEdit, modelConfig: model });
+                setSettingsEdit({ ...settingsEdit, modelSetting: model });
             }
         }
     };
@@ -108,17 +108,32 @@ export default function SettingWindow(props: Props) {
             <DialogTitle>{t('settings')}</DialogTitle>
             <DialogContent>
                 <TextField
+                    margin="dense"
+                    label={t('system prompt')}
+                    type="text"
+                    fullWidth
+                    variant="outlined"
+                    multiline
+                    value={settingsEdit.modelSetting.systemMessage}
+                    onChange={(e) => {
+                        let model = settingsEdit.modelSetting;
+                        model.systemMessage = e.target.value.trim();
+                        setSettingsEdit({ ...settingsEdit, modelSetting: model })
+                    }}
+                />
+
+                <TextField
                     autoFocus
                     margin="dense"
                     label={t('openai api key')}
                     type="password"
                     fullWidth
                     variant="outlined"
-                    value={settingsEdit.modelConfig.apiKey}
+                    value={settingsEdit.modelSetting.apiKey}
                     onChange={(e) => {
-                        let model = settingsEdit.modelConfig;
+                        let model = settingsEdit.modelSetting;
                         model.apiKey = e.target.value.trim();
-                        setSettingsEdit({ ...settingsEdit, modelConfig: model })
+                        setSettingsEdit({ ...settingsEdit, modelSetting: model })
                     }}
                 />
                 <FormControl fullWidth variant="outlined" margin="dense">
@@ -184,28 +199,28 @@ export default function SettingWindow(props: Props) {
                             type="text"
                             fullWidth
                             variant="outlined"
-                            value={settingsEdit.modelConfig.apiHost}
+                            value={settingsEdit.modelSetting.apiHost}
                             onChange={(e) => {
-                                let model = settingsEdit.modelConfig
+                                let model = settingsEdit.modelSetting
                                 model.apiHost = e.target.value.trim()
-                                setSettingsEdit({ ...settingsEdit, modelConfig: model })
+                                setSettingsEdit({ ...settingsEdit, modelSetting: model })
                             }}
                         />
 
                         {
-                            !settingsEdit.modelConfig.apiHost.match(/^(https?:\/\/)?api.openai.com(:\d+)?$/) && (
+                            !settingsEdit.modelSetting.apiHost.match(/^(https?:\/\/)?api.openai.com(:\d+)?$/) && (
                                 <Alert severity="warning">
-                                    {t('proxy warning', { apiHost: settingsEdit.modelConfig.apiHost })}
+                                    {t('proxy warning', { apiHost: settingsEdit.modelSetting.apiHost })}
                                     <Button onClick={() => {
-                                        let model = settingsEdit.modelConfig
-                                        model.apiHost = getDefaultSettings().modelConfig.apiHost
-                                        setSettingsEdit({ ...settingsEdit, modelConfig: model })
+                                        let model = settingsEdit.modelSetting
+                                        model.apiHost = getDefaultSettings().modelSetting.apiHost
+                                        setSettingsEdit({ ...settingsEdit, modelSetting: model })
                                     }}>{t('reset')}</Button>
                                 </Alert>
                             )
                         }
                         {
-                            settingsEdit.modelConfig.apiHost.startsWith('http://') && (
+                            settingsEdit.modelSetting.apiHost.startsWith('http://') && (
                                 <Alert severity="warning">
                                     {<Trans
                                         i18nKey="protocol warning"
@@ -215,7 +230,7 @@ export default function SettingWindow(props: Props) {
                             )
                         }
                         {
-                            !settingsEdit.modelConfig.apiHost.startsWith('http') && (
+                            !settingsEdit.modelSetting.apiHost.startsWith('http') && (
                                 <Alert severity="error">
                                     {<Trans
                                         i18nKey="protocol error"
@@ -240,7 +255,7 @@ export default function SettingWindow(props: Props) {
                             {t('click here to')}
                             <Button onClick={() => setSettingsEdit({
                                 ...settingsEdit,
-                                modelConfig: getDefaultSettings().modelConfig,
+                                modelSetting: getDefaultSettings().modelSetting,
                                 showModelName: getDefaultSettings().showModelName,
                             })}>{t('reset')}</Button>
                             {t('to default values.')}
@@ -251,11 +266,11 @@ export default function SettingWindow(props: Props) {
                             <Select
                                 label="Model"
                                 id="model-select"
-                                value={settingsEdit.modelConfig.name}
+                                value={settingsEdit.modelSetting.name}
                                 onChange={(e) => {
-                                    let model = settingsEdit.modelConfig
+                                    let model = settingsEdit.modelSetting
                                     model.name = e.target.value
-                                    setSettingsEdit({ ...settingsEdit, modelConfig: model })
+                                    setSettingsEdit({ ...settingsEdit, modelSetting: model })
                                 }}>
                                 {GPTModels.map((model) => (
                                     <MenuItem key={model} value={model}>
@@ -273,11 +288,11 @@ export default function SettingWindow(props: Props) {
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
                             <Box sx={{ width: '100%' }}>
                                 <Slider
-                                    value={settingsEdit.modelConfig.temperature}
+                                    value={settingsEdit.modelSetting.temperature}
                                     onChange={handleTemperatureChange}
                                     aria-labelledby="discrete-slider"
                                     valueLabelDisplay="auto"
-                                    defaultValue={settingsEdit.modelConfig.temperature}
+                                    defaultValue={settingsEdit.modelSetting.temperature}
                                     step={0.1}
                                     min={0}
                                     max={1}
@@ -303,11 +318,11 @@ export default function SettingWindow(props: Props) {
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
                             <Box sx={{ width: '92%' }}>
                                 <Slider
-                                    value={settingsEdit.modelConfig.maxContextSize === 'inf' ? 8192 : Number(settingsEdit.modelConfig.maxContextSize)}
+                                    value={settingsEdit.modelSetting.maxContextSize === 'inf' ? 8192 : Number(settingsEdit.modelSetting.maxContextSize)}
                                     onChange={handleMaxContextSliderChange}
                                     aria-labelledby="discrete-slider"
                                     valueLabelDisplay="auto"
-                                    defaultValue={settingsEdit.modelConfig.maxContextSize === 'inf' ? 8192 : Number(settingsEdit.modelConfig.maxContextSize)}
+                                    defaultValue={settingsEdit.modelSetting.maxContextSize === 'inf' ? 8192 : Number(settingsEdit.modelSetting.maxContextSize)}
                                     step={64}
                                     min={64}
                                     max={8192}
@@ -315,7 +330,7 @@ export default function SettingWindow(props: Props) {
                             </Box>
                             <TextField
                                 sx={{ marginLeft: 2 }}
-                                value={settingsEdit.modelConfig.maxContextSize}
+                                value={settingsEdit.modelSetting.maxContextSize}
                                 onChange={handleMaxContextInputChange}
                                 type="text"
                                 size="small"
@@ -331,8 +346,8 @@ export default function SettingWindow(props: Props) {
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
                             <Box sx={{ width: '92%' }}>
                                 <Slider
-                                    value={settingsEdit.modelConfig.maxTokens === 'inf' ? 8192 : Number(settingsEdit.modelConfig.maxTokens)}
-                                    defaultValue={settingsEdit.modelConfig.maxTokens === 'inf' ? 8192 : Number(settingsEdit.modelConfig.maxTokens)}
+                                    value={settingsEdit.modelSetting.maxTokens === 'inf' ? 8192 : Number(settingsEdit.modelSetting.maxTokens)}
+                                    defaultValue={settingsEdit.modelSetting.maxTokens === 'inf' ? 8192 : Number(settingsEdit.modelSetting.maxTokens)}
                                     onChange={handleRepliesTokensSliderChange}
                                     aria-labelledby="discrete-slider"
                                     valueLabelDisplay="auto"
@@ -343,7 +358,7 @@ export default function SettingWindow(props: Props) {
                             </Box>
                             <TextField
                                 sx={{ marginLeft: 2 }}
-                                value={settingsEdit.modelConfig.maxTokens}
+                                value={settingsEdit.modelSetting.maxTokens}
                                 onChange={handleRepliesTokensInputChange}
                                 type="text"
                                 size="small"

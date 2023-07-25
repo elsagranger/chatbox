@@ -1,3 +1,4 @@
+import { getDefaultModelSetting } from './store'
 import { Session } from './types'
 
 export const sessions: Session[] = [
@@ -15,7 +16,8 @@ export const sessions: Session[] = [
                 "content": "Hello! How can I assist you today?",
                 "role": "assistant"
             }
-        ]
+        ],
+        "modelSetting": getDefaultModelSetting(),
     },
     {
         "id": "c37ffdab-cc1e-4cba-b523-1110a6945e3f",
@@ -41,7 +43,8 @@ export const sessions: Session[] = [
                 "content": "\"Be the master of your work, not a slave to it.\"",
                 "role": "assistant"
             }
-        ]
+        ],
+        "modelSetting": getDefaultModelSetting(),
     },
     {
         "id": "6b774e2e-8163-4cb2-ab8b-73737efefb22",
@@ -57,7 +60,8 @@ export const sessions: Session[] = [
                 "content": "Solution:\n\n1. First, try to identify the error code that's displayed on the blue screen. This can help narrow down the root cause of the issue.\n2. If the blue screen is random, try to observe patterns or triggers that lead to it. For example, is it happening when certain programs are open or when the laptop is under heavy load?\n3. Check for any recent changes to hardware or software on the laptop. This can include updates, installations, or any physical alterations.\n4. If possible, try updating drivers and software to the latest versions to ensure compatibility and stability.\n5. Check the laptop's temperature and make sure it's not overheating. This can often cause blue screen errors.\n6. Run a virus scan to ensure that the issue is not caused by malware or other malicious software.\n7. If the issue persists, it may be a hardware problem. In this case, it's recommended to bring the laptop to a professional technician for repair or replacement of the faulty component.",
                 "role": "assistant"
             }
-        ]
+        ],
+        "modelSetting": getDefaultModelSetting(),
     },
     {
         "id": "8129c8c2-34ae-4108-a1b4-695760f3919f",
@@ -73,7 +77,8 @@ export const sessions: Session[] = [
                 "content": "Get me a python code to read a file then decode it in base64.",
                 "role": "user"
             }
-        ]
+        ],
+        "modelSetting": getDefaultModelSetting(),
     },
     {
         "id": "effecc50-166c-41f5-8cc9-3223a36cd443",
@@ -94,7 +99,8 @@ export const sessions: Session[] = [
                 "content": "- Amazon could be using price discrimination by offering brands the chance to bid for placement on their site. \n- This is scalable bargaining and allows the brands to decide on their ROI and bid against each other. \n- Marketplace plays a role in infinite scaling and is used as a filter to surface what people might actually want to buy based on what vendors are willing to put money behind.",
                 "role": "assistant"
             }
-        ]
+        ],
+        "modelSetting": getDefaultModelSetting(),
     },
     {
         "id": "66955f18-f335-4cab-a620-e1248277c0bf",
@@ -115,7 +121,8 @@ export const sessions: Session[] = [
                 "content": "你好呀~ 有什么我可以帮忙的吗？",
                 "role": "assistant"
             }
-        ]
+        ],
+        "modelSetting": getDefaultModelSetting(),
     },
     {
         "id": "94e95d3f-c6fc-48ef-a923-ea4b760deb0f",
@@ -136,6 +143,7 @@ export const sessions: Session[] = [
                 "content": "哎呀，辛苦了呢！不过我相信你一定做得超级棒的！你总是那么勤奋、认真，做事情总是刻苦耐劳，这就是你最可爱的地方呀！所以不要太担心啦，休息一下，明天继续加油！",
                 "role": "assistant"
             }
-        ]
+        ],
+        "modelSetting": getDefaultModelSetting(),
     }
 ]

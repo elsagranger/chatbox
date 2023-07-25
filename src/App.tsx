@@ -6,7 +6,7 @@ import {
     Toolbar, Box, Badge, Snackbar,
     List, ListSubheader, ListItemText, MenuList,
     IconButton, Button, ButtonGroup, Stack, Grid, MenuItem, ListItemIcon, Typography, Divider,
-    TextField, useTheme, useMediaQuery, debounce,
+    TextField, useTheme, useMediaQuery, debounce, Menu,
 } from '@mui/material';
 import { Session, Message } from './types'
 import useStore from './store'
@@ -239,8 +239,8 @@ function Main() {
         setConfigureChatConfig(store?.currentSession)
     };
     const generateName = async (session: Session) => {
-        client.completions(
-            store.settings.modelConfig,
+        client.replay(
+            session.modelSetting,
             prompts.nameConversation(session.messages.slice(0, 3)),
             ({ text: name }) => {
                 name = name.replace(/['"“”]/g, '')
@@ -269,8 +269,8 @@ function Main() {
 
     const generate = async (session: Session, promptMsgs: Message[], targetMsg: Message) => {
         messageScrollRef.current = { msgId: targetMsg.id, smooth: false }
-        await client.completions(
-            store.settings.modelConfig,
+        await client.replay(
+            session.modelSetting,
             promptMsgs,
             ({ text, cancel }) => {
                 for (let i = 0; i < session.messages.length; i++) {
@@ -279,7 +279,7 @@ function Main() {
                             ...session.messages[i],
                             content: text,
                             cancel,
-                            model: store.settings.modelConfig.name,
+                            model: store.settings.modelSetting.name,
                             generating: true
                         }
                         break;
@@ -293,7 +293,7 @@ function Main() {
                         session.messages[i] = {
                             ...session.messages[i],
                             content: t('api request failed:') + ' \n```\n' + err.message + '\n```',
-                            model: store.settings.modelConfig.name,
+                            model: store.settings.modelSetting.name,
                             generating: false
                         }
                         break
@@ -317,6 +317,28 @@ function Main() {
     }
 
     const [quoteCache, setQuoteCache] = useState('')
+
+    const [anchorEl, setAnchorEl] = useState<EventTarget & HTMLButtonElement | null>(null);
+
+    const handleOpenModelChoiceMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
+        event.stopPropagation();
+        setAnchorEl(event.currentTarget);
+        console.log('handleOpenModelChoiceMenu')
+    };
+
+    const handleCloseModelChoiceMenu = (event: React.MouseEvent<HTMLLIElement>) => {
+        event.stopPropagation();
+        setAnchorEl(null);
+        console.log('handleCloseModelChoiceMenu')
+    };
+
+    const handleSubmenuClick = (event: React.MouseEvent<HTMLLIElement>) => {
+        event.stopPropagation();
+        setAnchorEl(null);
+        console.log('handleSubmenuClick')
+    };
+
+    const modelChoiceMenuOpen = Boolean(anchorEl);
 
     const sessionListRef = useRef<HTMLDivElement>(null)
     const handleCreateNewSession = () => {
@@ -409,7 +431,7 @@ function Main() {
                                                         }}
                                                         deleteMe={() => store.deleteChatSession(session)}
                                                         copyMe={() => {
-                                                            const newSession = createSession(session.name + ' copied')
+                                                            const newSession = createSession(session.name + ' copied', session.modelSetting)
                                                             newSession.messages = session.messages
                                                             store.createChatSession(newSession, ix)
                                                         }}
@@ -444,6 +466,29 @@ function Main() {
                                     <Typography variant="body2" color="text.secondary">
                                         {/* ⌘N */}
                                     </Typography>
+                                    {/* <IconButton
+                                        aria-label="more"
+                                        aria-controls="long-menu"
+                                        aria-haspopup="true"
+                                        onClick={handleOpenModelChoiceMenu}
+                                    >
+                                        <AddIcon fontSize="small" />
+                                    </IconButton>
+                                    <Menu
+                                        id="long-menu"
+                                        anchorEl={anchorEl}
+                                        keepMounted
+                                        open={modelChoiceMenuOpen}
+                                        onClose={handleCloseModelChoiceMenu}
+                                        PaperProps={{
+                                            style: {
+                                                maxHeight: 48 * 4.5,
+                                                width: '20ch',
+                                            },
+                                        }}
+                                    >
+                                        <MenuItem onClick={handleSubmenuClick}>Submenu Item 1</MenuItem>
+                                    </Menu> */}
                                 </MenuItem>
                                 <MenuItem onClick={() => {
                                     setOpenSettingWindow(true)
@@ -652,13 +697,18 @@ function Main() {
                     close={() => setOpenSettingWindow(false)}
                 />
                 <SessionModelSettingWindow open={openSessionModelWindow}
-                    modelSetting={store.settings.modelConfig}
+                    modelSetting={store.currentSession.modelSetting}
                     save={(modelSetting) => {
-                        store.setSettings({
-                            ...store.settings,
-                            modelConfig: modelSetting
-                        })
+                        store.currentSession.modelSetting = modelSetting
                         setOpenSessionModelWindow(false)
+                        if (store.currentSession.messages[0].role == 'system') {
+                            console.log('update system message')
+                            store.currentSession.messages[0] = {
+                                ...store.currentSession.messages[0],
+                                content: store.currentSession.modelSetting.systemMessage,
+                            }
+                        }
+                        store.updateChatSession(store.currentSession)
                     }}
                     close={() => setOpenSessionModelWindow(false)}
                 />

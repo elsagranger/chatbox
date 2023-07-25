@@ -10,6 +10,8 @@ import { createSession } from './session';
 
 // setting store
 
+const defaultSessionName: string = "Untitled"
+
 export function getDefaultModelSetting(): ModelSetting {
     return {
         name: 'gpt-3.5-turbo',
@@ -18,14 +20,13 @@ export function getDefaultModelSetting(): ModelSetting {
         maxContextSize: "4000",
         temperature: 0.7,
         maxTokens: "2048",
-        needFormatPrompt: false,
-        systemMessage: 'You are a helpful assistant. You can help me by answering my questions. You can also ask me questions.',
+        systemMessage: "You are a helpful assistant. You can help me by answering my questions. You can also ask me questions.",
     }
 }
 
 export function getDefaultSettings(): Settings {
     return {
-        modelConfig: getDefaultModelSetting(),
+        modelSetting: getDefaultModelSetting(),
         showWordCount: false,
         showTokenCount: false,
         showModelName: false,
@@ -47,10 +48,10 @@ export async function readSettings(): Promise<Settings> {
 }
 
 export async function writeSettings(settings: Settings) {
-    if (!settings.modelConfig.apiHost) {
-        settings.modelConfig.apiHost = getDefaultSettings().modelConfig.apiHost
+    if (!settings.modelSetting.apiHost) {
+        settings.modelSetting.apiHost = getDefaultSettings().modelSetting.apiHost
     }
-    console.log('writeSettings.apiHost', settings.modelConfig.apiHost)
+    console.log('writeSettings.apiHost', settings.modelSetting.apiHost)
     return api.writeStore('settings', settings)
 }
 
@@ -75,12 +76,12 @@ export async function readSessions(settings: Settings): Promise<Session[]> {
         return defaults.sessions
     }
     if (sessions.length === 0) {
-        return [createSession()]
+        return [createSession(defaultSessionName, settings.modelSetting)]
     }
     return sessions.map((s: any) => {
         // 兼容旧版本的数据
         if (!s.model) {
-            s.model = getDefaultSettings().modelConfig
+            s.model = getDefaultSettings().modelSetting
         }
         return s
     })
@@ -127,7 +128,7 @@ export default function useStore() {
     useEffect(() => {
         readSettings().then((settings) => {
             _setSettings(settings)
-            if (settings.modelConfig.apiKey === '') {
+            if (settings.modelSetting.apiKey === '') {
                 setNeedSetting(true)
             }
             i18n.changeLanguage(settings.language).then();
@@ -139,7 +140,7 @@ export default function useStore() {
         i18n.changeLanguage(settings.language).then();
     }
 
-    const [chatSessions, _setChatSessions] = useState<Session[]>([createSession()])
+    const [chatSessions, _setChatSessions] = useState<Session[]>([createSession(defaultSessionName, settings.modelSetting)])
     const [currentSession, switchCurrentSession] = useState<Session>(chatSessions[0])
     useEffect(() => {
         readSessions(settings).then((sessions: Session[]) => {
@@ -155,7 +156,7 @@ export default function useStore() {
     const deleteChatSession = (target: Session) => {
         const sessions = chatSessions.filter((s) => s.id !== target.id)
         if (sessions.length === 0) {
-            sessions.push(createSession())
+            sessions.push(createSession(defaultSessionName, settings.modelSetting))
         }
         if (target.id === currentSession.id) {
             switchCurrentSession(sessions[0])
@@ -180,7 +181,7 @@ export default function useStore() {
         switchCurrentSession(session)
     }
     const createEmptyChatSession = () => {
-        createChatSession(createSession())
+        createChatSession(createSession(defaultSessionName, settings.modelSetting))
     }
 
     const setMessages = (session: Session, messages: Message[]) => {

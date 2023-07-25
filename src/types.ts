@@ -14,7 +14,6 @@ export interface ModelSetting {
     maxContextSize: string
     temperature: number
     maxTokens: string
-    needFormatPrompt: boolean
     systemMessage: string
 }
 
@@ -23,7 +22,7 @@ export interface Session {
     name: string
     messages: Message[]
     starred?: boolean
-    model: ModelSetting
+    modelSetting: ModelSetting
 }
 
 export interface Settings {
@@ -33,7 +32,7 @@ export interface Settings {
     theme: ThemeMode
     language: string
     fontSize: number
-    modelConfig: ModelSetting
+    modelSetting: ModelSetting
 }
 
 export const OpenAIRoleEnum = {
