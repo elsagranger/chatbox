@@ -4,13 +4,12 @@ import * as defaults from './defaults'
 import { v4 as uuidv4 } from 'uuid';
 import { ThemeMode } from './theme';
 import * as api from './api'
-import * as remote from './remote'
 import { useTranslation } from "react-i18next";
 import { createSession } from './session';
 
 // setting store
 
-const defaultSessionName: string = "Untitled"
+export const defaultSessionName: string = "Untitled"
 
 export function getDefaultModelSetting(): ModelSetting {
     return {
@@ -72,10 +71,7 @@ export async function writeConfig(config: Config) {
 
 export async function readSessions(settings: Settings): Promise<Session[]> {
     let sessions: Session[] | undefined = await api.readStore('chat-sessions')
-    if (!sessions) {
-        return defaults.sessions
-    }
-    if (sessions.length === 0) {
+    if (!sessions || sessions.length === 0) {
         return [createSession(defaultSessionName, settings.modelSetting)]
     }
     return sessions.map((s: any) => {
@@ -99,38 +95,11 @@ export default function useStore() {
     const [version, _setVersion] = useState('unknown')
     const [needCheckUpdate, setNeedCheckUpdate] = useState(false)
     const updateCheckTimer = useRef<NodeJS.Timeout>()
-    useEffect(() => {
-        const handler = async () => {
-            const version = await api.getVersion()
-            _setVersion(version)
-            try {
-                const config = await readConfig()
-                const os = await api.getPlatform()
-                const needUpdate = await remote.checkNeedUpdate(version, os, config)
-                setNeedCheckUpdate(needUpdate)
-            } catch (e) {
-                console.log(e)
-                setNeedCheckUpdate(true)
-            }
-        }
-        handler()
-        updateCheckTimer.current = setInterval(handler, 10 * 60 * 1000)
-        return () => {
-            if (updateCheckTimer.current) {
-                clearInterval(updateCheckTimer.current)
-                updateCheckTimer.current = undefined
-            }
-        }
-    }, [])
 
     const [settings, _setSettings] = useState<Settings>(getDefaultSettings())
-    const [needSetting, setNeedSetting] = useState(false)
     useEffect(() => {
         readSettings().then((settings) => {
             _setSettings(settings)
-            if (settings.modelSetting.apiKey === '') {
-                setNeedSetting(true)
-            }
             i18n.changeLanguage(settings.language).then();
         })
     }, [])
@@ -141,6 +110,22 @@ export default function useStore() {
     }
 
     const [chatSessions, _setChatSessions] = useState<Session[]>([createSession(defaultSessionName, settings.modelSetting)])
+
+    const findNonConflictSessionName = () => {
+        const names = chatSessions.map((s) => s.name)
+        if (!names.includes(defaultSessionName)) {
+            return defaultSessionName
+        }
+        let i = 1
+        while (true) {
+            const name = `${defaultSessionName} (${i})`
+            if (!names.includes(name)) {
+                return name
+            }
+            i++
+        }
+    }
+
     const [currentSession, switchCurrentSession] = useState<Session>(chatSessions[0])
     useEffect(() => {
         readSessions(settings).then((sessions: Session[]) => {
@@ -181,7 +166,7 @@ export default function useStore() {
         switchCurrentSession(session)
     }
     const createEmptyChatSession = () => {
-        createChatSession(createSession(defaultSessionName, settings.modelSetting))
+        createChatSession(createSession(findNonConflictSessionName(), settings.modelSetting))
     }
 
     const setMessages = (session: Session, messages: Message[]) => {
@@ -206,7 +191,6 @@ export default function useStore() {
 
         settings,
         setSettings,
-        needSetting,
 
         chatSessions,
         createChatSession,

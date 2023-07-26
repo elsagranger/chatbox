@@ -6,7 +6,6 @@ import {
 import iconPNG from './icon.png'
 import { Trans, useTranslation } from 'react-i18next'
 import * as api from './api'
-import * as remote from './remote'
 import { SponsorAboutBanner } from './types';
 
 interface Props {
@@ -19,13 +18,6 @@ interface Props {
 export default function AboutWindow(props: Props) {
     const { t } = useTranslation()
     const [sponsorBanners, setSponsorBanners] = useState<SponsorAboutBanner[]>([])
-    useEffect(() => {
-        if (props.open) {
-            remote.listSponsorAboutBanner().then(setSponsorBanners)
-        } else {
-            setSponsorBanners([])
-        }
-    }, [props.open])
     return (
         <Dialog open={props.open} onClose={props.close} fullWidth>
             <DialogTitle>{t('About Chatbox')}</DialogTitle>

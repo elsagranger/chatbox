@@ -100,7 +100,7 @@ export default function SessionItem(props: Props) {
                     handleClose()
                 }} disableRipple>
                     <SettingIcon />
-                    {t('setting')}
+                    {t('settings')}
                 </MenuItem>
 
                 <MenuItem key={session.id + 'copy'} onClick={() => {

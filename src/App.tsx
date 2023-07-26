@@ -9,7 +9,7 @@ import {
     TextField, useTheme, useMediaQuery, debounce, Menu,
 } from '@mui/material';
 import { Session, Message } from './types'
-import useStore from './store'
+import useStore, { defaultSessionName } from './store'
 import SettingWindow from './SettingWindow'
 import ChatConfigWindow from './ChatConfigWindow'
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -27,7 +27,6 @@ import { save } from '@tauri-apps/api/dialog';
 import { writeTextFile } from '@tauri-apps/api/fs';
 import ArrowCircleUpIcon from '@mui/icons-material/ArrowCircleUp';
 import ArrowCircleDownIcon from '@mui/icons-material/ArrowCircleDown';
-import SponsorChip from './SponsorChip'
 import "./styles/App.scss"
 import MenuOpenIcon from '@mui/icons-material/MenuOpen';
 import SendIcon from '@mui/icons-material/Send';
@@ -89,13 +88,9 @@ function Main() {
 
     // 是否展示设置窗口
     const [openSettingWindow, setOpenSettingWindow] = React.useState(false);
-    useEffect(() => {
-        if (store.needSetting) {
-            setOpenSettingWindow(true)
-        }
-    }, [store.needSetting])
 
-    const [openSessionModelWindow, setOpenSessionModelWindow] = React.useState(false);
+    const [sessionModelSetting, setSessionModelSetting] = React.useState<Session>(store.currentSession);
+    const [openSessionModelSettingWindow, setOpenSessionModelSettingWindow] = React.useState(false);
 
     // 是否展示相关信息的窗口
     const [openAboutWindow, setOpenAboutWindow] = React.useState(false);
@@ -195,7 +190,7 @@ function Main() {
     // 会话名称自动生成
     useEffect(() => {
         if (
-            store.currentSession.name === 'Untitled'
+            store.currentSession.name.startsWith(defaultSessionName)
             && store.currentSession.messages.findIndex(msg => msg.role === 'assistant') !== -1
         ) {
             generateName(store.currentSession)
@@ -239,18 +234,18 @@ function Main() {
         setConfigureChatConfig(store?.currentSession)
     };
     const generateName = async (session: Session) => {
-        client.replay(
-            session.modelSetting,
-            prompts.nameConversation(session.messages.slice(0, 3)),
-            ({ text: name }) => {
-                name = name.replace(/['"“”]/g, '')
-                session.name = name
-                store.updateChatSession(session)
-            },
-            (err) => {
-                console.log(err)
-            }
-        )
+        // client.replay(
+        //     session.modelSetting,
+        //     prompts.nameConversation(session.messages.slice(0, 3)),
+        //     ({ text: name }) => {
+        //         name = name.replace(/['"“”]/g, '')
+        //         session.name = name
+        //         store.updateChatSession(session)
+        //     },
+        //     (err) => {
+        //         console.log(err)
+        //     }
+        // )
     }
     const saveSession = async (session: Session) => {
         const filePath = await save({
@@ -436,7 +431,8 @@ function Main() {
                                                             store.createChatSession(newSession, ix)
                                                         }}
                                                         settingMe={() => {
-                                                            setOpenSessionModelWindow(true)
+                                                            setSessionModelSetting(session)
+                                                            setOpenSessionModelSettingWindow(true)
                                                         }}
                                                         switchStarred={() => {
                                                             store.updateChatSession({
@@ -571,7 +567,6 @@ function Main() {
                                     {store.currentSession.name}
                                 </span>
                             </Typography>
-                            <SponsorChip sessionId={store.currentSession.id} />
                             <IconButton edge="start" color="inherit" aria-label="menu" sx={{ mr: 2 }}
                                 onClick={() => setSessionClean(store.currentSession)}
                             >
@@ -696,21 +691,24 @@ function Main() {
                     }}
                     close={() => setOpenSettingWindow(false)}
                 />
-                <SessionModelSettingWindow open={openSessionModelWindow}
-                    modelSetting={store.currentSession.modelSetting}
+                <SessionModelSettingWindow open={openSessionModelSettingWindow}
+                    modelSetting={sessionModelSetting?.modelSetting || store.settings.modelSetting}
                     save={(modelSetting) => {
-                        store.currentSession.modelSetting = modelSetting
-                        setOpenSessionModelWindow(false)
-                        if (store.currentSession.messages[0].role == 'system') {
-                            console.log('update system message')
-                            store.currentSession.messages[0] = {
-                                ...store.currentSession.messages[0],
-                                content: store.currentSession.modelSetting.systemMessage,
+                        if (sessionModelSetting === null) {
+                            return
+                        }
+                        modelSetting.systemMessage = modelSetting.systemMessage.trim()
+                        sessionModelSetting.modelSetting = modelSetting
+                        if (sessionModelSetting.messages[0].role == 'system') {
+                            sessionModelSetting.messages[0] = {
+                                ...sessionModelSetting.messages[0],
+                                content: sessionModelSetting.modelSetting.systemMessage,
                             }
                         }
-                        store.updateChatSession(store.currentSession)
+                        store.updateChatSession(sessionModelSetting)
+                        setOpenSessionModelSettingWindow(false)
                     }}
-                    close={() => setOpenSessionModelWindow(false)}
+                    close={() => setOpenSessionModelSettingWindow(false)}
                 />
                 <AboutWindow open={openAboutWindow} version={store.version} lang={store.settings.language}
                     close={() => setOpenAboutWindow(false)}

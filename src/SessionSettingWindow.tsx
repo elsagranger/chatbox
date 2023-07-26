@@ -4,19 +4,18 @@ import {
     Dialog, DialogContent, DialogActions, DialogTitle, TextField,
     FormGroup, FormControlLabel, Switch, Select, MenuItem, FormControl, InputLabel, Slider, Typography, Box,
 } from '@mui/material';
-import { Settings, ModelSetting, GPTModels } from './types'
+import { ModelSetting } from './types'
 import { getDefaultSettings } from './store'
-import ThemeChangeButton from './theme/ThemeChangeIcon';
-import { ThemeMode } from './theme/index';
-import { useThemeSwicher } from './theme/ThemeSwitcher';
 import { styled } from '@mui/material/styles';
 import MuiAccordionDetails from '@mui/material/AccordionDetails';
 import MuiAccordion, { AccordionProps } from '@mui/material/Accordion';
 import MuiAccordionSummary, { AccordionSummaryProps } from '@mui/material/AccordionSummary';
 import ArrowForwardIosSharpIcon from '@mui/icons-material/ArrowForwardIosSharp';
-import { Trans, useTranslation } from 'react-i18next'
+import { useTranslation } from 'react-i18next'
 import PlaylistAddCheckCircleIcon from '@mui/icons-material/PlaylistAddCheckCircle';
 import LightbulbCircleIcon from '@mui/icons-material/LightbulbCircle';
+import { getModels } from './client';
+
 
 const { useEffect } = React
 
@@ -30,6 +29,17 @@ interface Props {
 export default function SessionModelSettingWindow(props: Props) {
     const { t } = useTranslation()
     const [settingsEdit, setSettingsEdit] = React.useState<ModelSetting>(props.modelSetting);
+    useEffect(() => {
+        setSettingsEdit(props.modelSetting)
+    }, [props.modelSetting])
+
+    const [availableModels, setAvailableModels] = React.useState<string[]>([])
+    useEffect(() => {
+        getModels(settingsEdit).then((models) => {
+            setAvailableModels(models)
+        })
+    }, [settingsEdit.apiHost, settingsEdit.apiKey])
+
     const handleRepliesTokensSliderChange = (event: Event, newValue: number | number[], activeThumb: number) => {
         if (newValue === 8192) {
             setSettingsEdit({ ...settingsEdit, maxTokens: 'inf' });
@@ -91,7 +101,7 @@ export default function SessionModelSettingWindow(props: Props) {
     // @ts-ignore
     return (
         <Dialog open={props.open} onClose={onCancel} fullWidth >
-            <DialogTitle>{t('settings')}</DialogTitle>
+            <DialogTitle>{t('per chat settings')}</DialogTitle>
             <DialogContent>
                 <TextField
                     margin="dense"
@@ -102,14 +112,14 @@ export default function SessionModelSettingWindow(props: Props) {
                     multiline
                     value={settingsEdit.systemMessage}
                     onChange={(e) => {
-                        setSettingsEdit({ ...settingsEdit, systemMessage: e.target.value.trim() })
+                        setSettingsEdit({ ...settingsEdit, systemMessage: e.target.value })
                     }}
                 />
 
                 <TextField
                     autoFocus
                     margin="dense"
-                    label={t('openai api key')}
+                    label={t('api key')}
                     type="password"
                     fullWidth
                     variant="outlined"
@@ -129,46 +139,16 @@ export default function SessionModelSettingWindow(props: Props) {
                         setSettingsEdit({ ...settingsEdit, apiHost: e.target.value.trim() })
                     }}
                 />
-
-                {
-                    !settingsEdit.apiHost.match(/^(https?:\/\/)?api.openai.com(:\d+)?$/) && (
-                        <Alert severity="warning">
-                            {t('proxy warning', { apiHost: settingsEdit.apiHost })}
-                            <Button onClick={() => setSettingsEdit({ ...settingsEdit, apiHost: getDefaultSettings().modelSetting.apiHost })}>{t('reset')}</Button>
-                        </Alert>
-                    )
-                }
-                {
-                    settingsEdit.apiHost.startsWith('http://') && (
-                        <Alert severity="warning">
-                            {<Trans
-                                i18nKey="protocol warning"
-                                components={{ bold: <strong /> }}
-                            />}
-                        </Alert>
-                    )
-                }
-                {
-                    !settingsEdit.apiHost.startsWith('http') && (
-                        <Alert severity="error">
-                            {<Trans
-                                i18nKey="protocol error"
-                                components={{ bold: <strong /> }}
-                            />}
-                        </Alert>
-                    )
-                }
-
                 <FormControl fullWidth variant="outlined" margin="dense">
                     <InputLabel htmlFor="model-select">{t('model')}</InputLabel>
                     <Select
                         label="Model"
                         id="model-select"
-                        value={settingsEdit.name}
+                        value={availableModels.indexOf(settingsEdit.name) > -1 ? settingsEdit.name : availableModels[0]}
                         onChange={(e) => {
                             setSettingsEdit({ ...settingsEdit, name: e.target.value })
                         }}>
-                        {GPTModels.map((model) => (
+                        {availableModels.map((model) => (
                             <MenuItem key={model} value={model}>
                                 {model}
                             </MenuItem>

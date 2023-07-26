@@ -35,26 +35,3 @@ function disableMenu() {
     }, { capture: true })
 }
 disableMenu()
-
-// ga4
-;(async () => {
-    const GAID = "G-B365F44W6E"
-    try {
-        const conf = await store.readConfig()
-        const version = await api.getVersion()
-        ReactGA.initialize([{
-            trackingId: GAID,
-            gaOptions: {
-                app_version: version,
-                clientId: conf.uuid
-            },
-            gtagOptions: {
-                app_version: version,
-                clientId: conf.uuid
-            }
-        }])
-    } catch (e) {
-        ReactGA.initialize(GAID)
-        throw e
-    }
-})()

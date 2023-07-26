@@ -1,7 +1,8 @@
 {
   "settings": "Settings",
   "theme": "Theme",
-  "openai api key": "OpenAI API Key",
+  "api key": "API Key",
+  "per chat settings": "Per Chat Settings",
   "show word count": "Show word count",
   "show estimated token count": "Show estimated token count",
   "proxy": "Proxy",

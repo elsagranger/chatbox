@@ -1,4 +1,4 @@
-import { Message, ModelSetting } from './types';
+import { GPTModels, Message, ModelSetting } from './types';
 import * as wordCount from './utils';
 import { createParser } from 'eventsource-parser'
 
@@ -7,6 +7,28 @@ export interface OnTextCallbackResult {
     text: string;
     // cancel for fetch
     cancel: () => void;
+}
+
+export async function getModels(
+    modelSetting: ModelSetting,
+) {
+    try {
+        const response = await fetch(`${modelSetting.apiHost}/v1/models`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${modelSetting.apiKey}`,
+                'Content-Type': 'application/json',
+            },
+        });
+        const data = await response.json()
+        const models = data.data.filter((model: { [object: string]: string }) => model.object == "model").map((model: { [id: string]: string }) => model.id)
+        console.log(models)
+        return models
+    }
+    catch (e) {
+        console.log(e)
+        return GPTModels
+    }
 }
 
 export async function replay(
@@ -73,9 +95,15 @@ export async function replay(
             if (message === '[DONE]') {
                 return;
             }
-            const data = JSON.parse(message)
-            if (data.error) {
-                throw new Error(`Error: ${JSON.stringify(data)}`)
+            let data
+            try {
+                data = JSON.parse(message)
+            }
+            catch (e) {
+                return;
+            }
+            if (data.type === 'error') {
+                throw new Error(`${data.message}`)
             }
             const text = data.choices[0]?.delta?.content
             if (text !== undefined) {
