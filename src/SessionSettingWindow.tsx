@@ -37,6 +37,10 @@ export default function SessionModelSettingWindow(props: Props) {
     useEffect(() => {
         getModels(settingsEdit).then((models) => {
             setAvailableModels(models)
+            if (models.indexOf(settingsEdit.name) === -1) {
+                let firstModel = models[0]
+                setSettingsEdit({ ...settingsEdit, name: firstModel })
+            }
         })
     }, [settingsEdit.apiHost, settingsEdit.apiKey])
 

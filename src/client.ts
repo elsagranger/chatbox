@@ -22,7 +22,6 @@ export async function getModels(
         });
         const data = await response.json()
         const models = data.data.filter((model: { [object: string]: string }) => model.object == "model").map((model: { [id: string]: string }) => model.id)
-        console.log(models)
         return models
     }
     catch (e) {

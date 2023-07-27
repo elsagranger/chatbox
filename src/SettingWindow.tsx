@@ -53,7 +53,7 @@ function TabPanel(props: TabPanelProps) {
         >
             {value === index && (
                 <Box sx={{ p: 3 }}>
-                    <Typography>{children}</Typography>
+                    <Typography component={'span'}>{children}</Typography>
                 </Box>
             )}
         </div>
@@ -72,8 +72,14 @@ export default function SettingWindow(props: Props) {
     useEffect(() => {
         getModels(settingsEdit.modelSetting).then((models) => {
             setAvailableModels(models)
+            if (models.indexOf(settingsEdit.modelSetting.name) === -1) {
+                let firstModel = models[0]
+                let model = settingsEdit.modelSetting
+                model.name = firstModel
+                setSettingsEdit({ ...settingsEdit, modelSetting: model })
+            }
         })
-    }, [settingsEdit.modelSetting.apiHost, settingsEdit.modelSetting.apiKey])
+    }, [settingsEdit.modelSetting, settingsEdit.modelSetting.apiHost, settingsEdit.modelSetting.apiKey])
 
     const handleRepliesTokensSliderChange = (event: Event, newValue: number | number[], activeThumb: number) => {
         let model = settingsEdit.modelSetting

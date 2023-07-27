@@ -50,7 +50,6 @@ export async function writeSettings(settings: Settings) {
     if (!settings.modelSetting.apiHost) {
         settings.modelSetting.apiHost = getDefaultSettings().modelSetting.apiHost
     }
-    console.log('writeSettings.apiHost', settings.modelSetting.apiHost)
     return api.writeStore('settings', settings)
 }
 
