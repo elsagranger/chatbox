@@ -26,7 +26,7 @@ export async function getModels(
     }
     catch (e) {
         console.log(e)
-        return GPTModels
+        return []
     }
 }
 

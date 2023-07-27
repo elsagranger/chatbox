@@ -70,16 +70,21 @@ export default function SettingWindow(props: Props) {
 
     const [availableModels, setAvailableModels] = React.useState<string[]>([])
     useEffect(() => {
-        getModels(settingsEdit.modelSetting).then((models) => {
-            setAvailableModels(models)
-            if (models.indexOf(settingsEdit.modelSetting.name) === -1) {
-                let firstModel = models[0]
-                let model = settingsEdit.modelSetting
-                model.name = firstModel
-                setSettingsEdit({ ...settingsEdit, modelSetting: model })
-            }
-        })
-    }, [settingsEdit.modelSetting, settingsEdit.modelSetting.apiHost, settingsEdit.modelSetting.apiKey])
+        if (props.open) {
+            getModels(settingsEdit.modelSetting).then((models) => {
+                if (models.length === 0) {
+                    return
+                }
+                setAvailableModels(models)
+                if (models.indexOf(settingsEdit.modelSetting.name) === -1) {
+                    let firstModel = models[0]
+                    let model = settingsEdit.modelSetting
+                    model.name = firstModel
+                    setSettingsEdit({ ...settingsEdit, modelSetting: model })
+                }
+            })
+        }
+    }, [props.open, settingsEdit.modelSetting, settingsEdit.modelSetting.apiHost, settingsEdit.modelSetting.apiKey])
 
     const handleRepliesTokensSliderChange = (event: Event, newValue: number | number[], activeThumb: number) => {
         let model = settingsEdit.modelSetting
@@ -195,8 +200,11 @@ export default function SettingWindow(props: Props) {
                         <Select
                             label="Model"
                             id="model-select"
-                            value={availableModels.indexOf(settingsEdit.modelSetting.name) > -1 ? settingsEdit.modelSetting.name : availableModels[0]}
+                            value={(availableModels.indexOf(settingsEdit.modelSetting.name) > -1 ? settingsEdit.modelSetting.name : availableModels[0]) ?? ""}
                             onChange={(e) => {
+                                if (e.target.value === undefined) {
+                                    return
+                                }
                                 let model = settingsEdit.modelSetting
                                 model.name = e.target.value
                                 setSettingsEdit({ ...settingsEdit, modelSetting: model })

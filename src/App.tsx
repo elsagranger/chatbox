@@ -624,8 +624,13 @@ function Main() {
                                             }
                                         }}
                                         copyMsg={() => {
-                                            navigator.clipboard.writeText(msg.content)
-                                            store.addToast(t('copied to clipboard'))
+                                            try {
+                                                navigator.clipboard.writeText(msg.content)
+                                                store.addToast(t('copied to clipboard'))
+                                            }
+                                            catch (e) {
+                                                store.addToast(t('copy failed'))
+                                            }
                                         }}
                                         quoteMsg={() => {
                                             let input = msg.content.split('\n').map((line: any) => `> ${line}`).join('\n')

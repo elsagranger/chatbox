@@ -35,14 +35,19 @@ export default function SessionModelSettingWindow(props: Props) {
 
     const [availableModels, setAvailableModels] = React.useState<string[]>([])
     useEffect(() => {
-        getModels(settingsEdit).then((models) => {
-            setAvailableModels(models)
-            if (models.indexOf(settingsEdit.name) === -1) {
-                let firstModel = models[0]
-                setSettingsEdit({ ...settingsEdit, name: firstModel })
-            }
-        })
-    }, [settingsEdit.apiHost, settingsEdit.apiKey])
+        if (props.open) {
+            getModels(settingsEdit).then((models) => {
+                if (models.length === 0) {
+                    return
+                }
+                setAvailableModels(models)
+                if (models.indexOf(settingsEdit.name) === -1) {
+                    let firstModel = models[0]
+                    setSettingsEdit({ ...settingsEdit, name: firstModel })
+                }
+            })
+        }
+    }, [props.open, settingsEdit.apiHost, settingsEdit.apiKey])
 
     const handleRepliesTokensSliderChange = (event: Event, newValue: number | number[], activeThumb: number) => {
         if (newValue === 8192) {
@@ -148,8 +153,11 @@ export default function SessionModelSettingWindow(props: Props) {
                     <Select
                         label="Model"
                         id="model-select"
-                        value={availableModels.indexOf(settingsEdit.name) > -1 ? settingsEdit.name : availableModels[0]}
+                        value={(availableModels.indexOf(settingsEdit.name) > -1 ? settingsEdit.name : availableModels[0]) ?? ""}
                         onChange={(e) => {
+                            if (e.target.value === undefined) {
+                                return
+                            }
                             setSettingsEdit({ ...settingsEdit, name: e.target.value })
                         }}>
                         {availableModels.map((model) => (
